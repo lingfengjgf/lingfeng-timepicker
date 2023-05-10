@@ -8,6 +8,8 @@
 		<view @click="showPop('time')" class="show-time">选择时:分:秒：{{timeDefault.startTime}}</view>
 		<view @click="showPop('hour-minute')" class="show-time">选择时:分：{{hmDefault.startTime}}</view>
 		<view @click="showPop('quarter')" class="show-time">选择年 季度：{{quarterDefault.quarter}}</view>
+		<view class="show-time">选择范围年-月：</view>
+		<view @click="showPop('year-month-range')" class="show-time">{{ymRangeDefault.startTime}} ~ {{ymRangeDefault.endTime}}</view>
 		<view class="show-time">选择范围年-月-日：</view>
 		<view @click="showPop('date-range')" class="show-time">{{dateRangeDefault.startTime}} ~ {{dateRangeDefault.endTime}}</view>
 		<view class="show-time">选择范围年-月-日 时:分：</view>
@@ -47,6 +49,10 @@ export default {
 			},
 			quarterDefault:{
 				quarter:'2022 一季度'
+			},
+			ymRangeDefault:{
+				startTime:'2022-02',
+				endTime:'2023-03',
 			},
 			dateRangeDefault:{
 				startTime:'2023-02-20',
@@ -103,6 +109,9 @@ export default {
 				case 'quarter':
 					this.defaultData=this.quarterDefault;
 					break;
+				case 'year-month-range':
+					this.defaultData=this.ymRangeDefault;
+					break;
 				case 'date-range':
 					this.defaultData=this.dateRangeDefault;
 					break;
@@ -146,6 +155,10 @@ export default {
 					break;
 				case 'quarter':
 					this.quarterDefault.quarter=val[0];
+					break;
+				case 'year-month-range':
+					this.ymRangeDefault.startTime=val[0];
+					this.ymRangeDefault.endTime=val[1];
 					break;
 				case 'date-range':
 					this.dateRangeDefault.startTime=val[0];

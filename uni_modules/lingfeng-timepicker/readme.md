@@ -78,6 +78,7 @@ methods: {
 |time	|HH:MM:SS		|"08:30:10"	|选择时、分、秒 |
 |hour-minute	|HH:MM	|"08:30" |选择时、分 |
 |quarter	|yyyy quarter		|["2020 一季度", "2020-01-01", "2020-03-31"]	|选择年、季度|
+|year-month-range	|yyyy-mm	|["2020-02", "2020-03"]|选择时间范围年、月|
 |date-range	|yyyy-mm-dd	|["2020-02-20", "2020-03-20"]|选择时间范围年、月、日|
 |datetime-range	|yyyy-mm-dd HH:MM		|["2020-02-20	08:30", "2020-03-20	08:30"]|选择时间范围年、月、日、时、分 |
 |datetime-all-range	|yyyy-mm-dd HH:MM:SS	|["2020-02-20	08:30:10", "2020-03-20	08:30:10"]|选择时间范围年、月、日、时、分、秒 |
@@ -92,9 +93,11 @@ methods: {
 |:-:	|:-:		|:-:	|:-:	|:-:				|
 |year	|String		| yyyy |当前年		|默认展示的年份，仅 `type="year"` 时生效|
 |month	|String		| yyyy-mm |当前年月		|仅 `type="year-month"` 时生效|
-|startTime	|String		| yyyy-mm-dd (HH:MM:SS)|当前日期(时间)		| 当`type!="year/year-month/quarter"` 时生效|
-|endTime	|String		| yyyy-mm-dd (HH:MM:SS)		|当前日期(时间)|当 `type="date-range/datetime-range/datetime-all-range/time-range"` 时生效|
+|startTime	|String		| yyyy-mm(-dd) (HH:MM:SS)|当前日期(时间)		| 当`type!="year/year-month/quarter"` 时生效|
+|endTime	|String		| yyyy-mm(-dd) (HH:MM:SS)		|当前日期(时间)|当 `type="year-month-range/date-range/datetime-range/datetime-all-range/time-range"` 时生效|
 |quarter	|String		| yyyy quarter |最小可选择年 季度		|仅 `type="quarter"` 时生效|
 
 
+## 联系作者
 
+QQ:1435464107
