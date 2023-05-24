@@ -1,15 +1,16 @@
 {
   "id": "lingfeng-timepicker",
   "displayName": "timepicker 时间选择器",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "基于picker-view、uni-popup的时间选择器，支持按年、月、日、时、分、秒、季度选择时间或时间范围，支持配置最大、最小选择日期",
   "keywords": [
     "timepicker",
     "时间",
     "日期",
-    "范围选择"
+    "范围选择",
+    "时间选择器"
 ],
-  "repository": "",
+  "repository": "https://github.com/lingfengjgf/lingfeng-timepicker",
   "engines": {
     "HBuilderX": "^3.4.1"
   },

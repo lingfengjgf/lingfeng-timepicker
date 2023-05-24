@@ -8,6 +8,8 @@
 		<view @click="showPop('time')" class="show-time">选择时:分:秒：{{timeDefault.startTime}}</view>
 		<view @click="showPop('hour-minute')" class="show-time">选择时:分：{{hmDefault.startTime}}</view>
 		<view @click="showPop('quarter')" class="show-time">选择年 季度：{{quarterDefault.quarter}}</view>
+		<view class="show-time">选择范围年：</view>
+		<view @click="showPop('year-range')" class="show-time">{{yRangeDefault.startTime}} ~ {{yRangeDefault.endTime}}</view>
 		<view class="show-time">选择范围年-月：</view>
 		<view @click="showPop('year-month-range')" class="show-time">{{ymRangeDefault.startTime}} ~ {{ymRangeDefault.endTime}}</view>
 		<view class="show-time">选择范围年-月-日：</view>
@@ -33,7 +35,7 @@ export default {
 			dateDefault:{
 				year:year,
 				month:year+'-'+month,
-				startTime:year+'-'+month+'-'+'01'
+				startTime:year+'-'+month+'-'+date
 			},
 			dateTimeDefault:{
 				startTime:'2023-02-20 08:30'
@@ -48,7 +50,11 @@ export default {
 				startTime:'08:30'
 			},
 			quarterDefault:{
-				quarter:'2022 一季度'
+				quarter:'2023 一季度'
+			},
+			yRangeDefault:{
+				startTime:'2022',
+				endTime:'2023',
 			},
 			ymRangeDefault:{
 				startTime:'2022-02',
@@ -72,13 +78,13 @@ export default {
 			},
 			minDate:{
 				year: 2020,
-				month: 3,
-				date: 5
+				month: 5,
+				date: 1
 			},
 			maxDate:{
-				year: 2025,
-				month: 9,
-				date: 20
+				year: 2050,
+				month: 5,
+				date:5
 			},
 		}
 	},
@@ -108,6 +114,9 @@ export default {
 					break;
 				case 'quarter':
 					this.defaultData=this.quarterDefault;
+					break;
+				case 'year-range':
+					this.defaultData=this.yRangeDefault;
 					break;
 				case 'year-month-range':
 					this.defaultData=this.ymRangeDefault;
@@ -155,6 +164,10 @@ export default {
 					break;
 				case 'quarter':
 					this.quarterDefault.quarter=val[0];
+					break;
+				case 'year-range':
+					this.yRangeDefault.startTime=val[0];
+					this.yRangeDefault.endTime=val[1];
 					break;
 				case 'year-month-range':
 					this.ymRangeDefault.startTime=val[0];
