@@ -1,3 +1,5 @@
+## 1.0.5（2023-07-02）
+新增周选择：type="week"
 ## 1.0.4（2023-05-24）
 1、修复 type = year-month-range 时，日期展示undefined的bug；
 2、新增适配底部安全区属性：safeArea。

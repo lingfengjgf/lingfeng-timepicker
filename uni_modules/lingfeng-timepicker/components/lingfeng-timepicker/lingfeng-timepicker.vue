@@ -40,6 +40,9 @@
 					<picker-view-column data-id='second' v-if='isShowSecond'>
 						<view class="item" v-for="(item,index) in seconds" :key="index">{{item}}秒</view>
 					</picker-view-column>
+					<picker-view-column data-id='week' v-if='isShowWeek'>
+						<view class="item" v-for="(item,index) in weeks" :key="index">{{item}}</view>
+					</picker-view-column>
 					<picker-view-column data-id='quarter' v-if='isShowQuarter'>
 						<view class="item" v-for="(item,index) in quarters" :key="index">{{item}}</view>
 					</picker-view-column>
@@ -57,7 +60,9 @@
 		removeZero,
 		getIndexOfArray,
 		getQuarterArray,
-		isOnlyTime
+		isOnlyTime,
+		getTotalWeeks,
+		getFirstAndLastDate
 	} from './uitls/util.js'
 	export default {
 		name: 'TimePicker',
@@ -91,6 +96,7 @@
 				 * datetime-all 年月日 时分秒
 				 * time 时分秒
 				 * hour-minute 时分
+				 * week 周
 				 * quarter 季度
 				 * year-range 年-范围
 				 * year-month-range 年月-范围
@@ -110,6 +116,7 @@
 						endTime: "", //默认结束日期/时间 yyyy-mm-dd (HH:MM:SS)
 						year: "", //默认年份		yyyy		
 						month: "", //默认年-月份 yyyy-mm
+						week: "", //默认周 2020 第1周
 						quarter: "", //默认季度 2020 一季度
 					}
 				}
@@ -162,6 +169,10 @@
 			safeArea: {
 				type: Boolean,
 				default: true
+			},
+			en: {
+				type: Boolean,
+				default: false
 			}
 		},
 		data() {
@@ -175,6 +186,7 @@
 				days: [],//可选的日列表
 				months: [],//可选的月列表
 				quarters: getQuarterArray(1, 12),//可选的季度列表
+				weeks: [], //可选的周列表
 				datestring: "",//选中的时间,格式化后的展示
 				allQuarter: [{
 						name: "一季度",
@@ -249,6 +261,10 @@
 					} else if(this.lastDateTime[1] != this.months[columns[1]]){
 						this.getDays(this.years[columns[0]], this.months[columns[1]] - 1);
 					}
+				} else if (this.type === "week") {
+					if (this.lastDateTime[0] != this.years[columns[0]]) {
+						this.getWeeks(this.years[columns[0]]);	
+					}
 				} else if (this.type === "quarter") {
 					if (this.lastDateTime[0] != this.years[columns[0]]) {
 						if (columns[0] == 0) {
@@ -292,6 +308,15 @@
 							columns.splice(2, 1, d_index)
 						}
 						
+					} else if (this.type === "week") {
+						if (this.lastDateTime[0] != this.years[columns[0]]) {
+							let index = columns[1];
+							index = this.weeks.findIndex(val => val == this.lastDateTime[1]);
+							if (index < 0) {
+								index = columns[0] == 0 ? 0 : this.weeks.length - 1;
+							}
+							columns.splice(1, 1, index)
+						}
 					} else if (this.type === "quarter") {
 						if (this.lastDateTime[0] != this.years[columns[0]]) {
 							let index = columns[1];
@@ -323,6 +348,8 @@
 						return addZero(this[names[index] + 's'][item]);
 					})
 					dateString = formatDateArray.join(':');
+				} else if (this.type === "week") {
+					dateString = this.years[this.dateTime[0]] + " " + this.weeks[this.dateTime[1]];
 				} else if (this.type === "quarter") {
 					dateString = this.years[this.dateTime[0]] + " " + this.quarters[this.dateTime[1]];
 				} else {
@@ -336,7 +363,7 @@
 					})
 					dateString = formatDateArray.splice(0, 3).join('-') + ' ' + formatDateArray.join(':');
 				}
-				if(this.type === "quarter"){
+				if(['week','quarter'].includes(this.type)){
 					this.lastDateTime = dateString.split(/[-: ]/);
 				}else{
 					let tempDate = [];
@@ -370,6 +397,9 @@
 					case "year":
 						this.pickerData.year = dateString;
 						break;
+					case "week":
+						this.pickerData.week = dateString;
+						break;
 					case "quarter":
 						this.pickerData.quarter = dateString;
 						break;
@@ -397,6 +427,8 @@
 					this.datestring = this.getDefaultYearMonth(this.pickerData.startTime,this.type);
 				} else if (this.type === 'quarter') {
 					this.datestring = this.pickerData.quarter;
+				} else if (this.type === 'week') {
+					this.datestring = this.pickerData.week;
 				} else {
 					// 处理默认开始时间和结束时间
 					let [y, m, d] = getTimeArray(new Date());
@@ -437,12 +469,11 @@
 					value = new Date();
 				}
 				let len, timeArray, index;
-				let array = this.type === 'quarter' ? this.datestring.split(" ") : getTimeArray(value);
+				let array = ['week','quarter'].includes(this.type) ? this.datestring.split(" ") : getTimeArray(value);
 				let [year, month, day, hour, minute, second] = array;
 				if(!['time','hour-minute','time-range'].includes(this.type)){
 					this.getMonths(year, month);
 				}
-
 				let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
 				switch (this.type) {
 					case "date":
@@ -454,6 +485,7 @@
 					case "year-month":
 					case "year-month-range":
 					case "hour-minute":
+					case "week":
 					case "quarter":
 						len = 2;
 						break;
@@ -474,6 +506,8 @@
 				if (['time','hour-minute','time-range'].includes(this.type)) {
 					names = names.slice(3);
 					array = array.slice(3);
+				} else if (this.type === "week") {
+					names = ["year", "week"];
 				} else if (this.type === "quarter") {
 					names = ["year", "quarter"];
 				} else {
@@ -505,6 +539,9 @@
 				if(this.type === 'quarter'){
 					this.quarters = getQuarterArray(1, 12);	
 				}
+				if(this.type === 'week'){
+					this.getWeeks(year?year:this.minDate.year);	
+				}
 				if(year == this.minDate.year && year == this.maxDate.year){
 					this.months = this.initTimeData(this.maxDate.month/1, this.minDate.month/1);
 					if(this.type === 'quarter'){
@@ -516,7 +553,7 @@
 						//当选择的是最小的年份，则匹配最小年份中的最小月份是否大于选中的月份
 						m = this.months[0]; //则选中最小的年份最小月份
 					}
-				} else if (year == this.minDate.year) {
+				} else if (!year || year == this.minDate.year) {
 					this.months = this.initTimeData(12, this.minDate.month/1);
 
 					if(this.type === 'quarter'){
@@ -554,6 +591,25 @@
 				}
 				this.days = this.initTimeData(end/1, start/1);
 				this.tempTime = new Date().getTime();
+			},
+			getWeeks(year){
+				let startDate = year + '/01/01', endDate = year + '/12/31';
+				if(year<=this.minDate.year){
+					startDate = this.minDate.year + '/' + addZero(this.minDate.month) + '/' + addZero(this.minDate.date);
+				}
+				if(year>=this.maxDate.year){
+					endDate = this.maxDate.year + '/' + addZero(this.maxDate.month) + '/' + addZero(this.maxDate.date);
+				}
+				const [start, end] = getTotalWeeks(startDate, endDate, this.en);
+				this.weeks = this.initTimeData(end, start).map(item=>`第${item}周`);
+			},
+			getWeekDate(){
+				let [year, w] = this.pickerData.week.split(" ");
+				let week = w.slice(1, - 1);
+				let { start, end } = getFirstAndLastDate(year, week, this.en);
+				start = this.getMinDate(start);
+				end = this.getMAxDate(end);
+				return [this.pickerData.week, start, end];
 			},
 			getQuarterDate(){
 				let [y, q] = this.pickerData.quarter.split(" ");
@@ -607,6 +663,9 @@
 						break;
 					case "year-month":
 						val = this.pickerData.month;
+						break;
+					case "week":
+						val = this.getWeekDate();
 						break;
 					case "quarter":
 						val = this.getQuarterDate();
@@ -675,7 +734,7 @@
 				return !['time','hour-minute','time-range'].includes(this.type);
 			},
 			isShowMonth() {
-				return !['year','time','hour-minute','quarter','year-range','time-range'].includes(this.type);
+				return !['year','time','hour-minute','week','quarter','year-range','time-range'].includes(this.type);
 			},
 			isShowDay() {
 				return ['date','datetime','datetime-all','date-range','datetime-range','datetime-all-range'].includes(this.type);
@@ -684,7 +743,7 @@
 				return this.initTimeData(23, 0);
 			},
 			isShowHour() {
-				return !['date','year-month','year','quarter','year-range','year-month-range','date-range'].includes(this.type);
+				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);
 			},
 			isShowRange() {
 				return ['year-range','year-month-range','date-range','datetime-range','datetime-all-range','time-range'].includes(this.type);
@@ -693,7 +752,7 @@
 				return this.initTimeData(59, 0);
 			},
 			isShowMinute() {
-				return !['date','year-month','year','quarter','year-range','year-month-range','date-range'].includes(this.type);
+				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);
 			},
 			seconds() {
 				return this.initTimeData(59, 0);
@@ -703,7 +762,10 @@
 			},
 			isShowQuarter() {
 				return this.type === 'quarter';
-			}
+			},
+			isShowWeek() {
+				return this.type === 'week';
+			},
 		},
 	}
 </script>

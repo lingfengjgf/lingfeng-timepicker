@@ -7,6 +7,7 @@
 		<view @click="showPop('datetime-all')" class="show-time">选择年-月-日 时:分:秒：{{dateTimeAllDefault.startTime}}</view>
 		<view @click="showPop('time')" class="show-time">选择时:分:秒：{{timeDefault.startTime}}</view>
 		<view @click="showPop('hour-minute')" class="show-time">选择时:分：{{hmDefault.startTime}}</view>
+		<view @click="showPop('week')" class="show-time">选择年 周：{{weekDefault.week}}</view>
 		<view @click="showPop('quarter')" class="show-time">选择年 季度：{{quarterDefault.quarter}}</view>
 		<view class="show-time">选择范围年：</view>
 		<view @click="showPop('year-range')" class="show-time">{{yRangeDefault.startTime}} ~ {{yRangeDefault.endTime}}</view>
@@ -48,6 +49,9 @@ export default {
 			},
 			hmDefault:{
 				startTime:'08:30'
+			},
+			weekDefault:{
+				week:'2023 第1周'
 			},
 			quarterDefault:{
 				quarter:'2023 一季度'
@@ -112,6 +116,9 @@ export default {
 				case 'hour-minute':
 					this.defaultData=this.hmDefault;
 					break;
+				case 'week':
+					this.defaultData=this.weekDefault;
+					break;
 				case 'quarter':
 					this.defaultData=this.quarterDefault;
 					break;
@@ -161,6 +168,9 @@ export default {
 					break;
 				case 'hour-minute':
 					this.hmDefault.startTime=val;
+					break;
+				case 'week':
+					this.weekDefault.week=val[0];
 					break;
 				case 'quarter':
 					this.quarterDefault.quarter=val[0];
