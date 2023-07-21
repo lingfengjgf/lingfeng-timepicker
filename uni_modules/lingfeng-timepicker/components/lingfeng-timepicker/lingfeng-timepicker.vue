@@ -417,13 +417,20 @@
 				Object.keys(this.defaultData).forEach(key=>{
 					this.pickerData[key] = this.defaultData[key];
 				})
+				let [y, m, d] = getTimeArray(new Date());
 				if (this.type === 'year') {
+					this.pickerData.year=this.pickerData.year||y;
 					this.datestring = this.getDefaultYearMonth(this.pickerData.year,this.type);
 				} else if (this.type === 'year-month') {
+					this.pickerData.month=this.pickerData.month||(y+'-'+addZero(m));
 					this.datestring = this.getDefaultYearMonth(this.pickerData.month,this.type);
 				} else if (this.type === 'year-range') {
+					this.pickerData.startTime=this.pickerData.startTime||y;
+					this.pickerData.endTime=this.pickerData.endTime||y;
 					this.datestring = this.getDefaultYearMonth(this.pickerData.startTime,this.type);
 				} else if (this.type === 'year-month-range') {
+					this.pickerData.startTime=this.pickerData.startTime||(y+'-'+addZero(m));
+					this.pickerData.endTime=this.pickerData.endTime||(y+'-'+addZero(m));
 					this.datestring = this.getDefaultYearMonth(this.pickerData.startTime,this.type);
 				} else if (this.type === 'quarter') {
 					this.datestring = this.pickerData.quarter;
@@ -431,7 +438,6 @@
 					this.datestring = this.pickerData.week;
 				} else {
 					// 处理默认开始时间和结束时间
-					let [y, m, d] = getTimeArray(new Date());
 					let startTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.startTime : this.pickerData.startTime.replace(/-/g,"/");
 					startTime=this.getMinDate(startTime);
 					this.pickerData.startTime = isNaN(Date.parse(startTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(startTime,this.type);
@@ -634,7 +640,7 @@
 			},
 			getDefaultYearMonth(date,type){
 				let minDate=['year','year-range'].includes(this.type)?this.minDate.year:(this.minDate.year+"-"+addZero(this.minDate.month));
-				let maxDate=['year','year-range'].includes(this.type)?this.maxDate.year:(this.maxDate.year+"-"+addZero(this.minDate.month));
+				let maxDate=['year','year-range'].includes(this.type)?this.maxDate.year:(this.maxDate.year+"-"+addZero(this.maxDate.month));
 				return date<minDate?minDate:date>maxDate?maxDate:date;
 			},
 			//popup
