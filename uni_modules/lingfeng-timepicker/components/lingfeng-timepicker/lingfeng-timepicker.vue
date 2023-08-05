@@ -173,6 +173,10 @@
 			en: {
 				type: Boolean,
 				default: false
+			},
+			weekType:{
+				type:String,
+				default:'firstWeek' // firstWeek fullWeek firstDay
 			}
 		},
 		data() {
@@ -606,13 +610,13 @@
 				if(year>=this.maxDate.year){
 					endDate = this.maxDate.year + '/' + addZero(this.maxDate.month) + '/' + addZero(this.maxDate.date);
 				}
-				const [start, end] = getTotalWeeks(startDate, endDate, this.en);
+				const [start, end] = getTotalWeeks(startDate, endDate, this.en, this.weekType);
 				this.weeks = this.initTimeData(end, start).map(item=>`第${item}周`);
 			},
 			getWeekDate(){
 				let [year, w] = this.pickerData.week.split(" ");
 				let week = w.slice(1, - 1);
-				let { start, end } = getFirstAndLastDate(year, week, this.en);
+				let { start, end } = getFirstAndLastDate(year, week, this.en, this.weekType);
 				start = this.getMinDate(start);
 				end = this.getMAxDate(end);
 				return [this.pickerData.week, start, end];
