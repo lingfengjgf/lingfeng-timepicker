@@ -86,6 +86,9 @@ export const isOnlyTime = (type) => {
  * 获取start,end之间有多少周
  */
 export const getTotalWeeks = (start, end, en, weekType) => {
+	if (weekType === 'firstDay') {
+		return getFirstDayTotalWeeks(start, end, weekType)
+	}
 	//获取end当前周的第一天
 	let endMon = getWeekFirstDate(new Date(end), en);
 	//获取start当前周的第一天
@@ -102,14 +105,7 @@ export const getTotalWeeks = (start, end, en, weekType) => {
 			firMon = curTime.setDate(curTime.getDate() + 7);
 		}
 	}
-	let d = Math.ceil((endMon.valueOf() - firMon.valueOf()) / 8.64e7);
-	let endWeek = Math.ceil(d / 7) + 1;
-	let startWeek = 1;
-	if (startMon !== firMon) {
-		let d = Math.ceil((startMon.valueOf() - firMon.valueOf()) / 8.64e7);
-		startWeek = Math.ceil(d / 7) + 1;
-	}
-	return [startWeek, endWeek];
+	return getStartAndEndWeek(firMon, startMon, endMon, weekType);
 }
 /**
  * 获取当前周的第一天
@@ -131,6 +127,9 @@ export const getFirstAndLastDate = (year, week, en, weekType) => {
 			firstDate.setDate(firstDate.getDate() + 7);
 		}
 	}
+	if (weekType === 'firstDay') {
+		firstDate = new Date(year + '/01/01');
+	}
 	firstDate = new Date(firstDate.setDate(firstDate.getDate() + (week - 1) * 7));
 	let lastDate = new Date(firstDate);
 	lastDate = new Date(lastDate.setDate(lastDate.getDate() + 6));
@@ -142,4 +141,23 @@ export const getFirstAndLastDate = (year, week, en, weekType) => {
 		start,
 		end
 	};
+}
+
+function getStartAndEndWeek(first, start, end) {
+	let d = Math.ceil((end.valueOf() - first.valueOf()) / 8.64e7) + 1;
+	let endWeek = Math.ceil(d / 7);
+	let startWeek = 1;
+	if (start !== first) {
+		let d = Math.ceil((start.valueOf() - first.valueOf()) / 8.64e7) + 1;
+		startWeek = Math.ceil(d / 7);
+	}
+	return [startWeek, endWeek];
+}
+
+function getFirstDayTotalWeeks(start, end, weekType) {
+	let year = new Date(start).getFullYear();
+	let startTime = new Date(start).getTime();
+	let endTime = new Date(end).getTime();
+	let firstTime = new Date(year + '/01/01').getTime();
+	return getStartAndEndWeek(firstTime, startTime, endTime, weekType)
 }

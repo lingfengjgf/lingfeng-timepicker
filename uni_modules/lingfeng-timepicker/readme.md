@@ -57,6 +57,7 @@ methods: {
 |popIindicatorStyle	|Object		|null		|选择器中间选中框的样式  	|
 |safeArea	|Boolean		|true		|是否适配底部安全区(同uni-popup)  	|
 |en	|Boolean		|false		|当`type="week"`时是否以国外的标准返回日期(以周日为一周的第一天) 	|
+|weekType	|String		|firstWeek		|当`type="week"`时定义周的类型，详见下文 [weekType属性说明](#weekType_info) 	|
 
 
 ## 组件事件
@@ -79,7 +80,7 @@ methods: {
 |datetime-all	|yyyy-mm-dd HH:MM:SS		|"2020-02-20	08:30:10"	|选择年、月、日、时、分、秒 |
 |time	|HH:MM:SS		|"08:30:10"	|选择时、分、秒 |
 |hour-minute	|HH:MM	|"08:30" |选择时、分 |
-|week	|yyyy week		|["2020 第一周", "2019-12-30", "2020-01-05"]	|选择年、周|
+|week	|yyyy week		|["2020 第1周", "2019-12-30", "2020-01-05"]	|选择年、周|
 |quarter	|yyyy quarter		|["2020 一季度", "2020-01-01", "2020-03-31"]	|选择年、季度|
 |year-range	|yyyy	|["2020", "2022"]|选择时间范围年|
 |year-month-range	|yyyy-mm	|["2020-02", "2020-03"]|选择时间范围年、月|
@@ -101,6 +102,17 @@ methods: {
 |endTime	|String		| yyyy(-mm-dd) (HH:MM:SS)		|当前日期(时间)|当 `type="year-range/year-month-range/date-range/datetime-range/datetime-all-range/time-range"` 时生效|
 |week	|String		| yyyy week |最小可选择年 周		|仅 `type="week"` 时生效|
 |quarter	|String		| yyyy quarter |最小可选择年 季度		|仅 `type="quarter"` 时生效|
+
+
+<a id="weekType_info"></a>
+
+### weekType属性说明
+
+|属性值	|说明				|
+|:-:	|:-:				|
+|firstWeek |以当前年第一天所在的周为第一周计算，以`2023`年为例，第一周返回的日期为`['2023 第1周', '2022-12-26', '2023-01-01']`|
+|fullWeek	|以当前年第一个完整周为第一周计算，以`2023`年为例，第一周返回的日期为`['2023 第1周', '2023-01-02', '2023-01-08']`|
+|firstDay	|以当前年第一天为第一周的第一天计算，以`2023`年为例，第一周返回的日期为`['2023 第1周', '2023-01-01', '2023-01-07']`|
 
 
 ## 联系作者
