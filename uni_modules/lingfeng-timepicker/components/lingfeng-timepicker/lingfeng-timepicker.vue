@@ -533,7 +533,7 @@
 					this.lastDateTime = array;
 					this.formatDate();
 					// this.lastDateTime = this.type === "quarter" ? array : this.type === "datetime" ? [year, month, day, hour, minute] :[year, month, day];
-				},60)
+				},100)
 			},
 			initTimeData(end, start) {//设置最大最小值
 				let timeArray = [];
