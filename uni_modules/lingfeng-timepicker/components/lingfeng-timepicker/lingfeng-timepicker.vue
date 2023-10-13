@@ -64,6 +64,7 @@
 		getTotalWeeks,
 		getFirstAndLastDate
 	} from './uitls/util.js'
+	const [year, month, date, hour, minute, second]=getTimeArray(new Date());
 	export default {
 		name: 'TimePicker',
 		props: {
@@ -73,7 +74,10 @@
 					return {
 						year: 1970,
 						month: 1,
-						date: 1
+						date: 1,
+						hour:0,
+						minute:0,
+						second:0
 					}
 				}
 			},
@@ -81,9 +85,12 @@
 				type: Object,
 				default: function() {
 					return {
-						year: new Date().getFullYear(),
-						month: new Date().getMonth() + 1,
-						date: new Date().getDate()
+						year,
+						month,
+						date,
+						hour:23,
+						minute:59,
+						second:59
 					}
 				}
 			},
@@ -191,6 +198,9 @@
 				months: [],//可选的月列表
 				quarters: getQuarterArray(1, 12),//可选的季度列表
 				weeks: [], //可选的周列表
+				hours: [], //可选的时列表
+				minutes: [], //可选的分列表
+				seconds: [], //可选的秒列表
 				datestring: "",//选中的时间,格式化后的展示
 				allQuarter: [{
 						name: "一季度",
@@ -258,13 +268,24 @@
 					// console.log("无效滚动")
 					return;
 				}
+				this.tempTime = new Date().getTime();
 				let columns = [...e.target.value];
-				if (['date','datetime','datetime-all','date-range','datetime-range','datetime-all-range'].includes(this.type)) {
-					if (this.lastDateTime[0] != this.years[columns[0]]) {
-						this.getMonths(this.years[columns[0]], this.lastDateTime[1]);
-					} else if(this.lastDateTime[1] != this.months[columns[1]]){
-						this.getDays(this.years[columns[0]], this.months[columns[1]] - 1);
+				let currentDateList=[];
+
+				if (isOnlyTime(this.type)) {
+					currentDateList = [this.hours[columns[0]],this.minutes[columns[1]],this.seconds[columns[2]]];
+					let tag = 2;
+					if(currentDateList[1]!=this.lastDateTime[1]){
+						tag = 3;
 					}
+					let minTag = currentDateList[0] == this.realMinDate.hour;
+					let maxTag = currentDateList[0] == this.realMaxDate.hour;
+					if(tag > 2) {
+						minTag = minTag && currentDateList[1] == this.realMinDate.minute;
+						maxTag = maxTag && currentDateList[1] == this.realMaxDate.minute;
+					}
+					
+					this.getHMSColumnsData(currentDateList, this.lastDateTime, tag, minTag, maxTag);
 				} else if (this.type === "week") {
 					if (this.lastDateTime[0] != this.years[columns[0]]) {
 						this.getWeeks(this.years[columns[0]]);	
@@ -272,70 +293,59 @@
 				} else if (this.type === "quarter") {
 					if (this.lastDateTime[0] != this.years[columns[0]]) {
 						if (columns[0] == 0) {
-							this.quarters = getQuarterArray(this.minDate.month, 12);
+							this.quarters = getQuarterArray(this.realMinDate.month, 12);
 						} else if (columns[0] == this.years.length - 1) {
-							this.quarters = getQuarterArray(1, this.maxDate.month);
+							this.quarters = getQuarterArray(1, this.realMaxDate.month);
 						} else {
 							this.quarters = getQuarterArray(1, 12);
 						}
 					}
-				} else if (["year-month","year-month-range"].includes(this.type)) {
-					this.getMonths(this.years[columns[0]]);
 				} else {
-					columns.forEach((column, index) => {
-						this.dateTime.splice(index, 1, column);
-					})
+					currentDateList=[this.years[columns[0]],this.months[columns[1]],this.days[columns[2]],this.hours[columns[3]],this.minutes[columns[4]],this.seconds[columns[5]]];
+					this.getColumnsData(currentDateList, this.lastDateTime);
 				}
-				setTimeout(() => {
-					if (['date','datetime','datetime-all','year-month','year-month-range','date-range','datetime-range','datetime-all-range'].includes(this.type)) {
-						if (this.lastDateTime[0] != this.years[columns[0]]) {
-							//年份变化后 查看月份是否在范围 否则重新选择,this.months上面已更新
-							let index = this.months.findIndex(val => val == this.lastDateTime[1]);
-							if (index < 0) {
-								index = columns[0] == this.years.length - 1 ? this.months.length - 1 : 0
-							}
-							columns.splice(1, 1, index)
-							if (!['year-month','year-month-range'].includes(this.type)) {
-								//月份变化后 查看日是否在范围 否则重新选择,this.days上面已更新
-								let d_index = this.days.findIndex(val => val == this.lastDateTime[2]);
-								if (d_index < 0) {
-									d_index = this.lastDateTime[2] <= this.days[0] ? 0 : this.days.length - 1;
-								}
-								columns.splice(2, 1, d_index);
-							}
-						} else if (['date','datetime','date-range','datetime-range','datetime-all-range'].includes(this.type) && this.lastDateTime[1] != this.months[columns[1]]) {
-							//月份变化后 查看日是否在范围 否则重新选择,this.days上面已更新
-							let d_index = this.days.findIndex(val => val == this.lastDateTime[2]);
-							if (d_index < 0) {
-								d_index = this.lastDateTime[2] <= this.days[0] ? 0 : this.days.length - 1;
-							}
-							columns.splice(2, 1, d_index)
+				if (this.type === "week") {
+					if (this.lastDateTime[0] != this.years[columns[0]]) {
+						let index = columns[1];
+						index = this.weeks.findIndex(val => val == this.lastDateTime[1]);
+						if (index < 0) {
+							index = columns[0] == 0 ? 0 : this.weeks.length - 1;
 						}
-						
-					} else if (this.type === "week") {
-						if (this.lastDateTime[0] != this.years[columns[0]]) {
-							let index = columns[1];
-							index = this.weeks.findIndex(val => val == this.lastDateTime[1]);
-							if (index < 0) {
-								index = columns[0] == 0 ? 0 : this.weeks.length - 1;
-							}
-							columns.splice(1, 1, index)
-						}
-					} else if (this.type === "quarter") {
-						if (this.lastDateTime[0] != this.years[columns[0]]) {
-							let index = columns[1];
-							index = this.quarters.findIndex(val => val == this.lastDateTime[1]);
-							if (index < 0) {
-								index = columns[0] == 0 ? 0 : this.quarters.length - 1;
-							}
-							columns.splice(1, 1, index)
-						}
+						columns.splice(1, 1, index)
 					}
-					columns.forEach((column, index) => {
-						this.dateTime.splice(index, 1, column);
-					})
-					this.formatDate();
-				},50)
+				} else if (this.type === "quarter") {
+					if (this.lastDateTime[0] != this.years[columns[0]]) {
+						let index = columns[1];
+						index = this.quarters.findIndex(val => val == this.lastDateTime[1]);
+						if (index < 0) {
+							index = columns[0] == 0 ? 0 : this.quarters.length - 1;
+						}
+						columns.splice(1, 1, index)
+					}
+				} else {
+					let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
+					if (isOnlyTime(this.type)){
+						names=names.slice(3);
+					}
+					const arr = [];
+					let i = 1;
+					while(i < currentDateList.length && currentDateList[i] != undefined) {
+						const colName = names[i] + 's';
+						let index = this[colName].findIndex(val => val == currentDateList[i]);
+						if (index < 0) {
+							index = currentDateList[i] <= this[colName][0] ? 0 : this[colName].length - 1;
+						}
+						arr.push(index);
+						i++;
+					}
+					columns.splice(1, columns.length-1, ...arr);
+				}
+				columns.forEach((column, index) => {
+					this.dateTime.splice(index, 1, column);
+				})
+				this.formatDate();
+				// setTimeout(() => {
+				// },50)
 			},
 			formatDate() {//选中的时间记录 及格式化
 				let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
@@ -346,7 +356,7 @@
 						return  addZero(num);
 					})
 					dateString = formatDateArray.join('-');
-				} else if (['time','hour-minute','time-range'].includes(this.type)) {
+				} else if (isOnlyTime(this.type)) {
 					names = names.splice(3);
 					formatDateArray = this.dateTime.map((item, index) => {
 						return addZero(this[names[index] + 's'][item]);
@@ -442,11 +452,11 @@
 					this.datestring = this.pickerData.week;
 				} else {
 					// 处理默认开始时间和结束时间
-					let startTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.startTime : this.pickerData.startTime.replace(/-/g,"/");
-					startTime=this.getMinDate(startTime);
+					let startTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.startTime : this.pickerData.startTime;
+					startTime=this.getMinDate(startTime).replace(/-/g,"/");
 					this.pickerData.startTime = isNaN(Date.parse(startTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(startTime,this.type);
-					let endTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.endTime : this.pickerData.endTime.replace(/-/g,"/");
-					startTime=this.getMinDate(endTime);
+					let endTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.endTime : this.pickerData.endTime;
+					endTime=this.getMinDate(endTime).replace(/-/g,"/");
 					this.pickerData.endTime = isNaN(Date.parse(endTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(endTime,this.type);
 					this.datestring = this.pickerData.startTime;
 				}
@@ -456,7 +466,7 @@
 				if (this.datestring && this.datestring.length > 0) {
 					if (['year','year-range'].includes(this.type)) {
 						value = new Date(this.datestring, 0);
-					} else if (['time','hour-minute','time-range'].includes(this.type)) {
+					} else if (isOnlyTime(this.type)) {
 						let date = new Date();
 						let ary = this.datestring.split(':');
 						ary.forEach((item, index) => {
@@ -469,6 +479,9 @@
 							}
 						})
 						value = date;
+						const currentHMS = getTimeArray(value).slice(3);
+						const lastHMS = [-1, -1, -1];
+						this.getHMSColumnsData(currentHMS, lastHMS, 1, true, true);
 					} else if(['year-month','year-month-range'].includes(this.type)){
 						let datestring = this.datestring.replace(/-/g, '/');
 						value = isNaN(Date.parse(datestring)) ? new Date(datestring+'/01') : new Date(datestring);
@@ -481,8 +494,10 @@
 				let len, timeArray, index;
 				let array = ['week','quarter'].includes(this.type) ? this.datestring.split(" ") : getTimeArray(value);
 				let [year, month, day, hour, minute, second] = array;
-				if(!['time','hour-minute','time-range'].includes(this.type)){
-					this.getMonths(year, month);
+				if (this.isShowWeek) {
+					this.getWeeks(year?year:this.realMinDate.year);	
+				} else if(!isOnlyTime(this.type)){
+					this.getColumnsData(array);
 				}
 				let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
 				switch (this.type) {
@@ -513,7 +528,7 @@
 						break;
 				}
 				timeArray = new Array(len).fill(0);
-				if (['time','hour-minute','time-range'].includes(this.type)) {
+				if (isOnlyTime(this.type)) {
 					names = names.slice(3);
 					array = array.slice(3);
 				} else if (this.type === "week") {
@@ -524,7 +539,7 @@
 					names = names.slice(0,len);
 					array = array.slice(0,len);
 				}
-				setTimeout(() => {
+				// setTimeout(() => {
 					timeArray = timeArray.map((item, index) => {
 						const name = names[index];
 						return getIndexOfArray(array[index], this[name + 's'])
@@ -532,8 +547,7 @@
 					this.dateTime = timeArray;
 					this.lastDateTime = array;
 					this.formatDate();
-					// this.lastDateTime = this.type === "quarter" ? array : this.type === "datetime" ? [year, month, day, hour, minute] :[year, month, day];
-				},100)
+				// },100)
 			},
 			initTimeData(end, start) {//设置最大最小值
 				let timeArray = [];
@@ -543,72 +557,138 @@
 				}
 				return timeArray;
 			},
-			getMonths(year, month) {//, monthIndex
-				let m = month;
-				this.months = this.initTimeData(12, 1);
-				if(this.type === 'quarter'){
-					this.quarters = getQuarterArray(1, 12);	
+			getColumnsData(currentDateList, lastDateTime=[-1,-1,-1,-1,-1,-1]){
+				let min='';
+				let max='';
+				let minTag=false;
+				let maxTag=false;
+				let currentYear=currentDateList[0];
+				let currentMonth=currentDateList[1];
+				let currentDate=currentDateList[2];
+				let currentHMS=currentDateList.slice(3);
+				let lastHMS=lastDateTime.slice(3);
+				if(this.isShowMonth || this.isShowQuarter){
+					if(currentYear==this.realMinDate.year){
+						minTag=true;
+					}
+					if (currentYear == this.realMaxDate.year){
+						maxTag=true;
+					}
+					if(currentYear!=lastDateTime[0]){
+						min=1;
+						max=12;
+						if (minTag){
+							min=this.realMinDate.month;
+							currentMonth=currentMonth<min?min:currentMonth;
+						}
+						if (maxTag){
+							max=this.realMaxDate.month;
+							currentMonth=currentMonth>max?max:currentMonth;
+						}
+						this.isShowMonth && (this.months = this.initTimeData(max, min));
+						this.isShowQuarter && (this.quarters = getQuarterArray(min, max));
+					}				
 				}
-				if(this.type === 'week'){
-					this.getWeeks(year?year:this.minDate.year);	
+				if(this.isShowDay){
+					minTag=minTag&&currentMonth == this.realMinDate.month;
+					maxTag=maxTag&&currentMonth == this.realMaxDate.month;
+					if(currentMonth!=lastDateTime[1]||max){
+						min=1;
+						max=getOneMonthDays(currentYear, currentMonth-1);
+						if (minTag){
+							min=this.realMinDate.date;
+							currentDate=currentDate<min?min:currentDate;
+						}
+						if (maxTag){
+							max=this.realMaxDate.date;
+							currentDate=currentDate>max?max:currentDate;
+						}
+						this.days = this.initTimeData(max, min);
+					}				
 				}
-				if(year == this.minDate.year && year == this.maxDate.year){
-					this.months = this.initTimeData(this.maxDate.month/1, this.minDate.month/1);
-					if(this.type === 'quarter'){
-						this.quarters = getQuarterArray(this.minDate.month, this.maxDate.month);
-					} else if(this.months[this.months.length-1] < m){
-						//当选择的是最大的年份，则匹配最小年份中的最大月份是否大于选中的月份
-						m = this.months[this.months.length-1]; //则选中最大的年份最大月份
-					} else if(this.months[0] > m){
-						//当选择的是最小的年份，则匹配最小年份中的最小月份是否大于选中的月份
-						m = this.months[0]; //则选中最小的年份最小月份
+				if(this.isShowHour){
+					// 判断时分秒列表是否需要重新赋值
+					let tag=0;
+					if(currentHMS[1]!=lastDateTime[4]){
+						tag=3;
 					}
-				} else if (!year || year == this.minDate.year) {
-					this.months = this.initTimeData(12, this.minDate.month/1);
-
-					if(this.type === 'quarter'){
-						//初始化季度范围
-						this.quarters = getQuarterArray(this.minDate.month, 12);	
-					} else if(this.months[0] > m){
-						//当选择的是最小的年份，则匹配最小年份中的最小月份是否大于选中的月份
-						m = this.months[0]; //则选中最小的年份最小月份
+					if(currentHMS[0]!=lastDateTime[3]){
+						tag=2;
 					}
-				} else if (year == this.maxDate.year) {
-					this.months = this.initTimeData(this.maxDate.month/1, 1);
-					
-					if(this.type === 'quarter'){
-						this.quarters = getQuarterArray(1, this.maxDate.month);
-					} else if(this.months[this.months.length-1] < m){
-						//当选择的是最大的年份，则匹配最小年份中的最大月份是否大于选中的月份
-						m = this.months[this.months.length-1]; //则选中最大的年份最大月份
+					if(max||currentDate!=lastDateTime[2]){
+						tag=1;
 					}
+					minTag=minTag&&currentDate==this.realMinDate.date;
+					maxTag=maxTag&&currentDate==this.realMaxDate.date;
+					if(tag>1){
+						minTag=minTag&&currentHMS[0]==this.realMinDate.hour;
+						maxTag=maxTag&&currentHMS[0]==this.realMaxDate.hour;	
+					}
+					if(tag>2){
+						minTag=minTag&&currentHMS[1]==this.realMinDate.minute;
+						maxTag=maxTag&&currentHMS[1]==this.realMaxDate.minute;	
+					}
+					this.getHMSColumnsData(currentHMS, lastHMS, tag, minTag, maxTag);
 				}
-				this.$nextTick(() => {
-					if (['date','datetime','datetime-all','date-range','datetime-range','datetime-all-range'].includes(this.type)) {
-						this.getDays(year, m - 1);
-					}
-				})
 			},
-			getDays(year, month) {
-				let start = 1;
-				let end = getOneMonthDays(year, month);
+			
+			getHMSColumnsData(currentHMS, lastHMS, tag, minTag, maxTag){
+				let [currentHour, currentMinute, currentSecond] = currentHMS;
+				let min="";
+				let max="";
+				if(tag==1){
+					min=0;
+					max=23;
+					if(minTag){
+						min=this.realMinDate.hour;
+						currentHour=currentHour<min?min:currentHour;
+					}
+					if(maxTag){
+						max=this.realMaxDate.hour;
+						currentHour=currentHour>max?max:currentHour;
+					}
+					this.hours = this.initTimeData(max, min);
+					tag=2;
+				}
 				
-				if (year == this.minDate.year / 1 && month + 1 == this.minDate.month / 1) {
-					start = this.minDate.date;
-				}
-				if (year == this.maxDate.year / 1 && month + 1 == this.maxDate.month / 1) {
-					end = this.maxDate.date;
-				}
-				this.days = this.initTimeData(end/1, start/1);
-				this.tempTime = new Date().getTime();
+				if(tag==2){
+					minTag=minTag&&currentHour==this.realMinDate.hour;
+					maxTag=maxTag&&currentHour==this.realMaxDate.hour;
+					min=0;
+					max=59;
+					if(minTag){
+						min=this.realMinDate.minute;
+						currentMinute=currentMinute<min?min:currentMinute;
+					}
+					if(maxTag){
+						max=this.realMaxDate.minute;
+						currentMinute=currentMinute>max?max:currentMinute;
+					}
+					this.minutes = this.initTimeData(max, min);
+					tag=3;
+				} 
+				
+				if(tag=3){
+					minTag=minTag&&currentMinute==this.realMinDate.minute;
+					maxTag=maxTag&&currentMinute==this.realMaxDate.minute;
+					min=0;
+					max=59;
+					if(minTag){
+						min=this.realMinDate.second;
+					}
+					if(maxTag){
+						max=this.realMaxDate.second;
+					}
+					this.seconds = this.initTimeData(max, min);
+				}	
 			},
 			getWeeks(year){
 				let startDate = year + '/01/01', endDate = year + '/12/31';
-				if(year<=this.minDate.year){
-					startDate = this.minDate.year + '/' + addZero(this.minDate.month) + '/' + addZero(this.minDate.date);
+				if(year<=this.realMinDate.year){
+					startDate = this.realMinDate.year + '/' + addZero(this.realMinDate.month) + '/' + addZero(this.realMinDate.date);
 				}
-				if(year>=this.maxDate.year){
-					endDate = this.maxDate.year + '/' + addZero(this.maxDate.month) + '/' + addZero(this.maxDate.date);
+				if(year>=this.realMaxDate.year){
+					endDate = this.realMaxDate.year + '/' + addZero(this.realMaxDate.month) + '/' + addZero(this.realMaxDate.date);
 				}
 				const [start, end] = getTotalWeeks(startDate, endDate, this.en, this.weekType);
 				this.weeks = this.initTimeData(end, start).map(item=>`第${item}周`);
@@ -617,8 +697,8 @@
 				let [year, w] = this.pickerData.week.split(" ");
 				let week = w.slice(1, - 1);
 				let { start, end } = getFirstAndLastDate(year, week, this.en, this.weekType);
-				start = this.getMinDate(start);
-				end = this.getMAxDate(end);
+				start = this.formatPickerData(this.getMinDate(start),'date');
+				end = this.formatPickerData(this.getMAxDate(end),'date');
 				return [this.pickerData.week, start, end];
 			},
 			getQuarterDate(){
@@ -626,25 +706,26 @@
 				let index = getIndexOfArray(q, this.allQuarter, "name");
 				let start = y + "-" + this.allQuarter[index].start;
 				let end = y + "-" + this.allQuarter[index].end;
-				start = this.getMinDate(start);
-				end = this.getMAxDate(end);
+				start = this.formatPickerData(this.getMinDate(start),'date');
+				end = this.formatPickerData(this.getMAxDate(end),'date');
 				return [this.pickerData.quarter,start, end];
 			},
 			getMinDate(date){
-				let minArr = [this.minDate.year, addZero(this.minDate.month), addZero(this.minDate.date)];
+				let defaultMInArr=[1970,1,1,0,0,0];
+				let minDate = `${this.realMinDate.year||defaultMInArr[0]}/${this.realMinDate.month||defaultMInArr[1]}/${this.realMinDate.date||defaultMInArr[2]} ${this.realMinDate.hour||defaultMInArr[3]}:${this.realMinDate.minute||defaultMInArr[4]}:${this.realMinDate.second||defaultMInArr[5]}`;
 				let repDate=date.replace(/-/g,"/");
 				let datetime=isNaN(Date.parse(repDate))?new Date().getTime():new Date(repDate).getTime();
-				return datetime>new Date(minArr.join("/")).getTime()?date:minArr.join("-");
+				return datetime>new Date(minDate).getTime()?date:minDate.replace(/\//g,"-");
 			},
 			getMAxDate(date){
-				let maxArr = [this.maxDate.year, addZero(this.maxDate.month), addZero(this.maxDate.date)];
+				let maxDate = `${this.realMaxDate.year}/${this.realMaxDate.month}/${this.realMaxDate.date} ${this.realMaxDate.hour}:${this.realMaxDate.minute}:${this.realMaxDate.second}`;
 				let repDate=date.replace(/-/g,"/");
 				let datetime=isNaN(Date.parse(repDate))?new Date().getTime():new Date(repDate).getTime();
-				return datetime<new Date(maxArr.join("/")).getTime()?date:maxArr.join("-");
+				return datetime<new Date(maxDate).getTime()?date:maxDate;
 			},
 			getDefaultYearMonth(date,type){
-				let minDate=['year','year-range'].includes(this.type)?this.minDate.year:(this.minDate.year+"-"+addZero(this.minDate.month));
-				let maxDate=['year','year-range'].includes(this.type)?this.maxDate.year:(this.maxDate.year+"-"+addZero(this.maxDate.month));
+				let minDate=['year','year-range'].includes(this.type)?this.realMinDate.year:(this.realMinDate.year+"-"+addZero(this.realMinDate.month));
+				let maxDate=['year','year-range'].includes(this.type)?this.realMaxDate.year:(this.realMaxDate.year+"-"+addZero(this.realMaxDate.month));
 				return date<minDate?minDate:date>maxDate?maxDate:date;
 			},
 			//popup
@@ -738,7 +819,7 @@
 		},
 		computed: {
 			years() {//可选的年列表
-				return this.initTimeData(this.maxDate.year, this.minDate.year);
+				return this.initTimeData(this.realMaxDate.year, this.realMinDate.year);
 			},
 			isShowYear() {
 				return !['time','hour-minute','time-range'].includes(this.type);
@@ -749,23 +830,14 @@
 			isShowDay() {
 				return ['date','datetime','datetime-all','date-range','datetime-range','datetime-all-range'].includes(this.type);
 			},
-			hours() {
-				return this.initTimeData(23, 0);
-			},
 			isShowHour() {
 				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);
 			},
 			isShowRange() {
 				return ['year-range','year-month-range','date-range','datetime-range','datetime-all-range','time-range'].includes(this.type);
 			},
-			minutes() {
-				return this.initTimeData(59, 0);
-			},
 			isShowMinute() {
 				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);
-			},
-			seconds() {
-				return this.initTimeData(59, 0);
 			},
 			isShowSecond() {
 				return ['time','datetime-all','datetime-all-range','time-range'].includes(this.type);
@@ -776,6 +848,28 @@
 			isShowWeek() {
 				return this.type === 'week';
 			},
+			realMinDate(){
+				return {
+					year: 1970,
+					month: 1,
+					date: 1,
+					hour:0,
+					minute:0,
+					second:0,
+					...this.minDate
+				}
+			},
+			realMaxDate(){
+				return {
+					year,
+					month,
+					date,
+					hour:23,
+					minute:59,
+					second:59,
+					...this.maxDate
+				}
+			}
 		},
 	}
 </script>

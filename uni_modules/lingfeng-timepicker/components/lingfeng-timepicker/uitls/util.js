@@ -15,14 +15,14 @@ export const getOneMonthDays = (year, month) => {
 /**
  * 获取日期的年月日时分秒
  */
-export const getTimeArray = (date) => {
-	const year = date.getFullYear();
-	const month = date.getMonth() + 1;
-	const day = date.getDate();
-	const hour = date.getHours();
-	const minute = date.getMinutes();
-	const second = date.getSeconds();
-	return [year, month, day, hour, minute, second];
+export const getTimeArray = (data) => {
+	const year = data.getFullYear();
+	const month = data.getMonth() + 1;
+	const date = data.getDate();
+	const hour = data.getHours();
+	const minute = data.getMinutes();
+	const second = data.getSeconds();
+	return [year, month, date, hour, minute, second];
 }
 /**
  * 小于10的数字前面补0
