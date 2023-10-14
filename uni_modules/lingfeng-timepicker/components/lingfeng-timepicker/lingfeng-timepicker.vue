@@ -61,6 +61,7 @@
 		getIndexOfArray,
 		getQuarterArray,
 		isOnlyTime,
+		isRange,
 		getTotalWeeks,
 		getFirstAndLastDate
 	} from './uitls/util.js'
@@ -304,48 +305,48 @@
 					currentDateList=[this.years[columns[0]],this.months[columns[1]],this.days[columns[2]],this.hours[columns[3]],this.minutes[columns[4]],this.seconds[columns[5]]];
 					this.getColumnsData(currentDateList, this.lastDateTime);
 				}
-				if (this.type === "week") {
-					if (this.lastDateTime[0] != this.years[columns[0]]) {
-						let index = columns[1];
-						index = this.weeks.findIndex(val => val == this.lastDateTime[1]);
-						if (index < 0) {
-							index = columns[0] == 0 ? 0 : this.weeks.length - 1;
+				setTimeout(() => {
+					if (this.type === "week") {
+						if (this.lastDateTime[0] != this.years[columns[0]]) {
+							let index = columns[1];
+							index = this.weeks.findIndex(val => val == this.lastDateTime[1]);
+							if (index < 0) {
+								index = columns[0] == 0 ? 0 : this.weeks.length - 1;
+							}
+							columns.splice(1, 1, index)
 						}
-						columns.splice(1, 1, index)
-					}
-				} else if (this.type === "quarter") {
-					if (this.lastDateTime[0] != this.years[columns[0]]) {
-						let index = columns[1];
-						index = this.quarters.findIndex(val => val == this.lastDateTime[1]);
-						if (index < 0) {
-							index = columns[0] == 0 ? 0 : this.quarters.length - 1;
+					} else if (this.type === "quarter") {
+						if (this.lastDateTime[0] != this.years[columns[0]]) {
+							let index = columns[1];
+							index = this.quarters.findIndex(val => val == this.lastDateTime[1]);
+							if (index < 0) {
+								index = columns[0] == 0 ? 0 : this.quarters.length - 1;
+							}
+							columns.splice(1, 1, index)
 						}
-						columns.splice(1, 1, index)
-					}
-				} else {
-					let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
-					if (isOnlyTime(this.type)){
-						names=names.slice(3);
-					}
-					const arr = [];
-					let i = 1;
-					while(i < currentDateList.length && currentDateList[i] != undefined) {
-						const colName = names[i] + 's';
-						let index = this[colName].findIndex(val => val == currentDateList[i]);
-						if (index < 0) {
-							index = currentDateList[i] <= this[colName][0] ? 0 : this[colName].length - 1;
+					} else {
+						let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
+						if (isOnlyTime(this.type)){
+							names=names.slice(3);
 						}
-						arr.push(index);
-						i++;
+						const arr = [];
+						let i = 1;
+						while(i < currentDateList.length && currentDateList[i] != undefined) {
+							const colName = names[i] + 's';
+							let index = this[colName].findIndex(val => val == currentDateList[i]);
+							if (index < 0) {
+								index = currentDateList[i] <= this[colName][0] ? 0 : this[colName].length - 1;
+							}
+							arr.push(index);
+							i++;
+						}
+						columns.splice(1, columns.length-1, ...arr);
 					}
-					columns.splice(1, columns.length-1, ...arr);
-				}
-				columns.forEach((column, index) => {
-					this.dateTime.splice(index, 1, column);
-				})
-				this.formatDate();
-				// setTimeout(() => {
-				// },50)
+					columns.forEach((column, index) => {
+						this.dateTime.splice(index, 1, column);
+					})
+					this.formatDate();
+				},50)
 			},
 			formatDate() {//选中的时间记录 及格式化
 				let names = ['year', 'month', 'day', 'hour', 'minute', 'second'];
@@ -428,38 +429,47 @@
 				}
 			},
 			initDefaultDate() {//初始化起始时间
+				const pickerData = {};
 				Object.keys(this.defaultData).forEach(key=>{
-					this.pickerData[key] = this.defaultData[key];
+					pickerData[key] = this.defaultData[key];
 				})
 				let [y, m, d] = getTimeArray(new Date());
 				if (this.type === 'year') {
-					this.pickerData.year=this.pickerData.year||y;
-					this.datestring = this.getDefaultYearMonth(this.pickerData.year,this.type);
+					pickerData.year=pickerData.year||y;
+					this.datestring = this.getDefaultYearMonth(pickerData.year,this.type);
 				} else if (this.type === 'year-month') {
-					this.pickerData.month=this.pickerData.month||(y+'-'+addZero(m));
-					this.datestring = this.getDefaultYearMonth(this.pickerData.month,this.type);
+					pickerData.month=pickerData.month||(y+'-'+addZero(m));
+					this.datestring = this.getDefaultYearMonth(pickerData.month,this.type);
 				} else if (this.type === 'year-range') {
-					this.pickerData.startTime=this.pickerData.startTime||y;
-					this.pickerData.endTime=this.pickerData.endTime||y;
-					this.datestring = this.getDefaultYearMonth(this.pickerData.startTime,this.type);
+					pickerData.startTime=pickerData.startTime||y;
+					pickerData.endTime=pickerData.endTime||y;
+					this.datestring = this.getDefaultYearMonth(pickerData.startTime,this.type);
 				} else if (this.type === 'year-month-range') {
-					this.pickerData.startTime=this.pickerData.startTime||(y+'-'+addZero(m));
-					this.pickerData.endTime=this.pickerData.endTime||(y+'-'+addZero(m));
-					this.datestring = this.getDefaultYearMonth(this.pickerData.startTime,this.type);
+					pickerData.startTime=pickerData.startTime||(y+'-'+addZero(m));
+					pickerData.endTime=pickerData.endTime||(y+'-'+addZero(m));
+					this.datestring = this.getDefaultYearMonth(pickerData.startTime,this.type);
 				} else if (this.type === 'quarter') {
-					this.datestring = this.pickerData.quarter;
+					this.datestring = pickerData.quarter;
 				} else if (this.type === 'week') {
-					this.datestring = this.pickerData.week;
+					this.datestring = pickerData.week;
 				} else {
 					// 处理默认开始时间和结束时间
-					let startTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.startTime : this.pickerData.startTime;
+					let startTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + pickerData.startTime : pickerData.startTime;
 					startTime=this.getMinDate(startTime).replace(/-/g,"/");
-					this.pickerData.startTime = isNaN(Date.parse(startTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(startTime,this.type);
-					let endTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + this.pickerData.endTime : this.pickerData.endTime;
-					endTime=this.getMinDate(endTime).replace(/-/g,"/");
-					this.pickerData.endTime = isNaN(Date.parse(endTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(endTime,this.type);
-					this.datestring = this.pickerData.startTime;
+					pickerData.startTime = isNaN(Date.parse(startTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(startTime,this.type);
+					if(isRange(this.type)){
+						let endTime=isOnlyTime(this.type) ? y + "/" + m + "/" + d + " " + pickerData.endTime : pickerData.endTime;
+						endTime=this.getMinDate(endTime).replace(/-/g,"/");
+						pickerData.endTime = isNaN(Date.parse(endTime)) ? this.formatPickerData(new Date(),this.type) : this.formatPickerData(endTime,this.type);						
+					}
+					this.datestring = pickerData.startTime;
 				}
+				
+				this.$nextTick(()=>{
+					Object.keys(pickerData).forEach(key=>{
+						this.pickerData[key] = pickerData[key];
+					})					
+				})
 			},
 			initDateTime() {//初始化picker-view选择的时间
 				let value;
@@ -834,7 +844,7 @@
 				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);
 			},
 			isShowRange() {
-				return ['year-range','year-month-range','date-range','datetime-range','datetime-all-range','time-range'].includes(this.type);
+				return isRange(this.type);
 			},
 			isShowMinute() {
 				return !['date','year-month','year','week','quarter','year-range','year-month-range','date-range'].includes(this.type);

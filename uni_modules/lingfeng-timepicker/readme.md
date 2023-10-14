@@ -43,8 +43,8 @@ methods: {
 |属性名	|类型		|默认值	|说明				|
 |:-:	|:-:		|:-:	|:-:				|
 |type	|String		|date		|选择时间类型，详见下文 [type属性说明](#type_info)|
-|minDate	|Object		|{ year: 1970, month: 1, date: 1 } |最小可选择时间|
-|maxDate	|Object		|{ year: 当前年份, month: 当前月份, date: 当前日期 } |最大可选择时间|
+|minDate	|Object		|{ year: 1970, month: 1, date: 1, hour: 0, minute: 0, second: 0 } |最小可选择时间|
+|maxDate	|Object		|{ year: 当前年份, month: 当前月份, date: 当前日期, hour: 23, minute: 59, second: 59 } |最大可选择时间|
 |defaultData	|Object		| |默认选择时间，详见下文 [defaultData属性说明](#defaultData_info)|
 |toolBarTitle	|String		|""		|组件顶部标题  	|
 |toolBarTitleClass	|String		|tool-title		|组件顶部标题样式类名  	|

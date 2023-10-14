@@ -83,12 +83,18 @@ export default {
 			minDate:{
 				year: 2020,
 				month: 5,
-				date: 1
+				date: 1,
+				hour:6,
+				minute:30,
+				second:20
 			},
 			maxDate:{
 				year: 2050,
 				month: 5,
-				date:5
+				date:5,
+				hour:20,
+				minute:30,
+				second:0
 			},
 		}
 	},
