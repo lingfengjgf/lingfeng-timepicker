@@ -21,7 +21,7 @@
 					<view @click="dateTabChange(2)" class="picker-tab-item" :style="[rangeBtnStyle,dateTab==2?rangeBtnActiveStyle:'']"
 					>{{pickerData.endTime}}</view>
 				</view>
-				<picker-view class="picker-view" :indicator-style="popupIndicatorStyleString" :value="dateTime" @change="dateTimePickerChange">
+				<picker-view class="picker-view" :indicator-style="popupIndicatorStyleString" :value="dateTime" @change="dateTimePickerChange" @pickstart="dateTimePickerStart" @touchstart="dateTimePickerStart">
 					<picker-view-column data-id='year' v-if='isShowYear'>
 						<view class="item" v-for="(item,index) in years" :key="index">{{item}}年</view>
 					</picker-view-column>
@@ -189,7 +189,7 @@
 		},
 		data() {
 			return {
-				showPicker: false,
+				isPickend: true,
 				showPopPicker: false,
 				dateTab: 1,
 				popupIndicatorStyleString:"",
@@ -262,6 +262,9 @@
 				this.datestring = i == 2 ? this.pickerData.endTime : this.pickerData.startTime;
 				this.initDateTime();
 				this.tempTime = new Date().getTime();
+			},
+			dateTimePickerStart() {
+				this.isPickend = false;
 			},
 			dateTimePickerChange(e) {
 				if(new Date().getTime()-this.tempTime < 100){
@@ -419,6 +422,7 @@
 						this.pickerData.quarter = dateString;
 						break;
 				}
+				this.isPickend = true;
 				// this.$emit('change', dateString)
 			},
 			getPopIndicatorStyle() {
@@ -750,6 +754,14 @@
 				return;
 			},
 			confirm() {
+				if (this.confirm.target) {
+					return ;
+				}
+				this.confirm.target = true;
+				if (!this.isPickend) {
+					return ;
+				}
+				this.confirm.target = null;
 				let val;
 				switch (this.type){
 					case "date":
@@ -881,6 +893,14 @@
 				}
 			}
 		},
+		watch: {
+			isPickend(val) {
+				if (val && this.confirm.target) {
+					this.confirm.target = null;
+					this.confirm();
+				}
+			}
+		}
 	}
 </script>
 
