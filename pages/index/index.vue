@@ -21,7 +21,18 @@
 		<view @click="showPop('datetime-all-range')" class="show-time">{{dateTimeAllRangeDefault.startTime}} ~ {{dateTimeAllRangeDefault.endTime}}</view>
 		<view class="show-time">选择范围时:分:秒：</view>
 		<view @click="showPop('time-range')" class="show-time">{{timeRangeDefault.startTime}} ~ {{timeRangeDefault.endTime}}</view>
-		<lingfeng-timepicker ref="timePop" :type="pickerType" :defaultData="defaultData" :minDate="minDate" :maxDate="maxDate" @change="timeChange"></lingfeng-timepicker>
+		<view class="show-time">自定义顶部时间范围展示：</view>
+		<view @click="showSlotPop('year-range')" class="show-time">{{yRangeDefault.startTime}} ~ {{yRangeDefault.endTime}}</view>
+		<lingfeng-timepicker ref="timePop" :type="pickerType" :defaultData="defaultData" :minDate="minDate" :maxDate="maxDate" @change="timeChange">
+		</lingfeng-timepicker>
+		<lingfeng-timepicker ref="slotTimePop" type="year-range" :defaultData="defaultData" :minDate="minDate" :maxDate="maxDate" @change="rangeTimeChange">
+			<template #range="{ pickerData, dateTab }">
+				<view>
+					<text @click="rangeChange(1)" class="range-text" :class="{show: dateTab === 1}">{{ pickerData.startTime }}年</text> 至
+					<text @click="rangeChange(2)" class="range-text" :class="{show: dateTab === 2}">{{ pickerData.endTime }}年</text>
+				</view>
+			</template>
+		</lingfeng-timepicker>
 	</view>
 </template>
 
@@ -95,7 +106,7 @@ export default {
 				hour:20,
 				minute:30,
 				second:0
-			},
+			}
 		}
 	},
 	onLoad() {
@@ -209,6 +220,17 @@ export default {
 				default:
 					break;
 			}
+		},
+		showSlotPop() {
+			this.defaultData=this.yRangeDefault;
+			this.$refs.slotTimePop.show();
+		},
+		rangeChange(tab) {
+			this.$refs.slotTimePop.dateTabChange(tab);
+		},
+		rangeTimeChange(val) {
+			this.yRangeDefault.startTime=val[0];
+			this.yRangeDefault.endTime=val[1];
 		}
     }
 }
@@ -219,5 +241,11 @@ export default {
 		font-size: 30rpx;
 		border-bottom: 2rpx solid #f7f7f7;
 		padding: 10rpx;
+	}
+	.range-text{
+		margin: 0 10px;
+	}
+	.range-text.show{
+		color: #049bff;
 	}
 </style>

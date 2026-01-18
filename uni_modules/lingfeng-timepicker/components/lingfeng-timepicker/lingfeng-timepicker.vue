@@ -15,11 +15,13 @@
 					</view>
 				</view>
 				<view class="picker-tab" v-if="isShowRange">
-					<view @click="dateTabChange(1)" class="picker-tab-item" :style="[rangeBtnStyle,dateTab==1?rangeBtnActiveStyle:'']"
-					>{{pickerData.startTime}}</view>
-					至
-					<view @click="dateTabChange(2)" class="picker-tab-item" :style="[rangeBtnStyle,dateTab==2?rangeBtnActiveStyle:'']"
-					>{{pickerData.endTime}}</view>
+					<slot name="range" :pickerData="pickerData" :dateTab="dateTab">
+						<view @click="dateTabChange(1)" class="picker-tab-item" :style="[rangeBtnStyle,dateTab==1?rangeBtnActiveStyle:'']"
+						>{{pickerData.startTime}}</view>
+						至
+						<view @click="dateTabChange(2)" class="picker-tab-item" :style="[rangeBtnStyle,dateTab==2?rangeBtnActiveStyle:'']"
+						>{{pickerData.endTime}}</view>						
+					</slot>
 				</view>
 				<picker-view class="picker-view" :indicator-style="popupIndicatorStyleString" :value="dateTime" @change="dateTimePickerChange" @pickstart="dateTimePickerStart" @touchstart="dateTimePickerStart">
 					<picker-view-column data-id='year' v-if='isShowYear'>
@@ -243,7 +245,6 @@
 			},
 			close() {
 				this.$emit('close');
-				this.showPopPicker = false;
 				this.$refs.popup.close();
 				this.pickerData={
 					startTime: "",
@@ -253,6 +254,9 @@
 					year: ""
 				}
 				this.lastDateTime=[];
+				setTimeout(() =>{
+					this.showPopPicker = false;
+				}, 300)
 			},
 			dateTabChange(i) {
 				if (this.dateTab == i) {
@@ -806,8 +810,10 @@
 			popChange(val){
 				if(!val.show){
 					this.$emit("close");
-					this.showPopPicker = false;
 					this.$parent.pageScrollFlag=true;
+					setTimeout(() =>{
+						this.showPopPicker = false;
+					}, 300)
 				}
 			},
 			formatPickerData(date,type){
